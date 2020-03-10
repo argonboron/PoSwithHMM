@@ -50,6 +50,7 @@ transitions = get_transitions(training_set)
 def get_max_prob(transitions, emissions, current_tag, word, prev_probabilites):
     max_prob = 0.0
     max_prev_tag = ''
+    #print(transitions)
     for prev_tag in transitions:
         if transitions[prev_tag].prob(current_tag)*prev_probabilites[prev_tag]['probability'] > max_prob:
             max_prob = transitions[prev_tag].prob(current_tag)*prev_probabilites[prev_tag]['probability']
@@ -74,7 +75,8 @@ def backtrack(probability_table):
     for i in range(len(probability_table)-1, -1, -1):
         predicted.insert(0, current_parent)
         current_parent = probability_table[i][current_parent]['parent']
-    #print(predicted)
+    print(predicted)
+    return predicted
 
 def print_table(probability_table):
     for i in range (0, len(probability_table)):
@@ -83,7 +85,6 @@ def print_table(probability_table):
 
 def viterbi(sentence, emissions, transitions):
     probability_table = [{}]
-
     for current_tag in transitions:
         if current_tag is not 'END':
             max_prob = transitions['START'].prob(current_tag)
@@ -97,23 +98,21 @@ def viterbi(sentence, emissions, transitions):
             probability_table[i][current_tag] = get_max_prob(transitions, emissions, current_tag, sentence[i], probability_table[i-1])
 
     predicted_tags = backtrack(probability_table)
+    return predicted_tags
 
-def get_prediction_accuracy(test_set):
-    total_no_of_tags = 0;
-    no_of_correct_tags = 0;
+def get_prediction_accuracy(testing_set):
+    total_num = 0
+    correct = 0
 
-    for sentence in test_set:
-        words = [w for (w,_) in sentence];  #need to split into words and tags
-        tags = [t for (_,t) in sentence];
+    for sentence in testing_set:
+        words = [w for (w,_) in sentence]  #need to split into words and tags
+        tags = [t for (_,t) in sentence]
+        total_num = total_num+len(tags)
+        prediction = viterbi(words, emissions, transitions)
+        for i in range (0, len(tags)):
+            if (prediction[i] == tags[i]):
+                correct=correct+1
+    accuracy = correct/total_num
+    return accuracy
 
-        pred_tags = viterbi(words, transitions, emissions);
-
-        for i in range (0,len(pred_tags)):
-            if(pred_tags[i] == tags[i]):
-                no_of_correct_tags = no_of_correct_tags+1;
-
-    accuracy = no_of_correct_tags/total_no_of_tags;
-    print(accuracy)
-    return accuracy;
-
-get_prediction_accuracy(testing_set)
+print(get_prediction_accuracy(testing_set))
